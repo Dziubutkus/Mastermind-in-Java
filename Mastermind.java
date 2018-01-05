@@ -1,8 +1,11 @@
 /*************************************************************************************
 | Mastermind Board Game			
 | Description: A mastermind board game written in Java
-| Instructor: Vicky Eisele
+| Due: 10/27/2017
+| Submitted: 10/27/2017
+| Instructor: Victoria Eisele
 | Author: Dziugas Butkus
+| Part 5: Place the guesses and answers into a class and create an array of the class
  *************************************************************************************/
 import java.util.Scanner;
 public class Mastermind
@@ -12,33 +15,46 @@ public class Mastermind
 	
 	public static void main( String[ ] args )
 	{
+		Turns[] turn = new Turns[10];
+		// Call the constructor for each object
+		for(int i = 0; i < 10; i++)
+		{
+			turn[i] = new Turns();
+		}
+		
 		char[] generatedColors = new char[4]; 
-		char[][] playersGuess = new char[10][4];
+		//char[][] playersGuess = new char[10][4];
 		int numberOfGuesses = 0;
-		char[][] placement = new char[10][4];
-		int colorNum = 0; // Number of correct colors. Declared here because if colorNum == 4 ? playGame == false
+		//char[][] placement = new char[10][4];
+		int placementNum = 0; // Number of correct colors. Declared here because if placementNum == 4 ? playGame == false
 		boolean playGame = true; // Game is run while true
 		//char playAgain; // Answer if user wants to play again
 		
 		if(playGame == true)
 		{
 			// Create borders and squares
-			makeBoard(playersGuess, false, numberOfGuesses, placement);
+			makeBoard(turn, false, numberOfGuesses);
 			// Generate 4 different colors 
 			generateColors(generatedColors);
 		}
 		
 		while(playGame && numberOfGuesses < 10)
 		{
+			for(int i = 0; i < 4; i++)
+			{
+				System.out.println(generatedColors[i]);
+			}
 			// Player's guess
-			getPlayersGuess(playersGuess, numberOfGuesses);
+			getPlayersGuess(turn[numberOfGuesses].getPlayersGuess(), numberOfGuesses);
+			
 			// Check placement
-			colorNum = checkPlacement(playersGuess, generatedColors, placement, numberOfGuesses);
+			placementNum = checkPlacement(turn[numberOfGuesses].getPlacement(), turn[numberOfGuesses].getPlayersGuess(), generatedColors, numberOfGuesses);
+			//System.out.println(turn[0].getPlacement()[0]);
 			// Redraw the board
-			makeBoard(playersGuess, true, numberOfGuesses, placement);
+			makeBoard(turn, true, numberOfGuesses);
 			numberOfGuesses++;
 			
-			if(colorNum == 4)
+			if(placementNum == 4)
 			{
 				playGame = false;
 			}
@@ -64,13 +80,13 @@ public class Mastermind
 	 * @parameters: none
 	 * @return: none
 	 **********************************************/
-	public static void makeBoard(char[][] playersGuess, boolean putGuess, int numberOfGuesses, char[][] placement)
+	public static void makeBoard(Turns[] turn, boolean putGuess, int numberOfGuesses)
 	{
 		int numberOfRow = 1;
 		for(int i = 0; i < 10; i++)
 		{
 			makeSolidLine();
-			makeSides(numberOfRow, playersGuess, putGuess, numberOfGuesses, placement, i);
+			makeSides(numberOfRow, turn, putGuess, numberOfGuesses, i);
 			numberOfRow++;
 		}
 		makeSolidLine(); // To have a bottom border
@@ -97,7 +113,7 @@ public class Mastermind
 	 * @parameters: number - number of each row
 	 * @return: none
 	 **********************************************/
-	public static void makeSides(int number, char[][] playersGuess, boolean putGuess, int numberOfGuesses, char[][] placement, int line)
+	public static void makeSides(int number, Turns[] turn, boolean putGuess, int numberOfGuesses, int line)
 	{
 		int firstHalf = 4; // First half of the row 
 		// Top line
@@ -126,7 +142,7 @@ public class Mastermind
 		{
 			if(putGuess)
 			{
-				System.out.print ( "|  " + playersGuess[number-1][i] + "  " );
+				System.out.print ( "|  " + turn[number-1].getPlayersGuess()[i] + "  " );
 			}
 			else
 			{
@@ -138,7 +154,7 @@ public class Mastermind
 		{
 			if(putGuess)
 			{
-				System.out.print ( "|  " + placement[number-1][i] + "  " );
+				System.out.print ( "|  " + turn[number-1].getPlacement()[i] + "  " );
 			}
 			else
 			{
@@ -232,7 +248,7 @@ public class Mastermind
 	 * @parameters: playersGuess[] - player's guess stored in array
 	 * @return: playersGuess[] - player's guess stored in array
 	 **********************************************/
-	public static void getPlayersGuess(char[][] playersGuess, int turn)
+	public static void getPlayersGuess(char[] playersGuess, int turn)
 	{
 		System.out.println ( "Guess the pattern of colors (type the first letter of the color)" );
 		char guess;
@@ -249,13 +265,13 @@ public class Mastermind
 					guess = input.next().toUpperCase().charAt ( 0 );
 				}while(!(guess == 'Y' || guess == 'P' || guess == 'R' || guess == 'G' || guess == 'B' || guess == 'O'));
 			}
-			playersGuess[turn][i] = guess;
+			playersGuess[i] = guess;
 			// Check if colors user entered do not repeat
 			for(int j = i-1; j >= 0; j--)
 			{
-				if(playersGuess[turn][i] == playersGuess[turn][j]) // If this colors is already generated, change it
+				if(playersGuess[i] == playersGuess[j]) // If this colors is already generated, change it
 				{
-					System.out.println ( "You cannot duplicate the colors.");
+					System.out.println ( "You cannot duplicate colors.");
 					i--;
 				}
 			}
@@ -269,40 +285,40 @@ public class Mastermind
 	 * []placement - an array of correct placements and colors 
 	 * @return: []placement - an array of correct placements and colors
 	 **********************************************/
-	public static int checkPlacement(char[][] playersGuess, char[] generatedColors, char[][] placement, int numberOfGuesses)
+	public static int checkPlacement(char[] placement, char[] playersGuess, char[] generatedColors, int numberOfGuesses)
 	{
 		int placementNum = 0;
 		int colorNum = 0;
 		for(int i = 0; i < 4; i++)
 		{
-			placement[numberOfGuesses][i] = ' '; // To make sure every element in array has a space
-			if(playersGuess[numberOfGuesses][i] == generatedColors[i])
+			placement[i] = ' '; // To make sure every element in array has a space
+			if(playersGuess[i] == generatedColors[i])
 			{
-				colorNum++;
+				placementNum++;
 			}
 			else
 			{
 				for(int j = 0; j < 4; j++)
 				{
-					if(playersGuess[numberOfGuesses][i] == generatedColors[j])
+					if(playersGuess[i] == generatedColors[j])
 					{
-						placementNum++;
+						colorNum++;
 					}
 				}
 			}
 		}
 		// Place cs and ps into an array
-		int i = 0;
-		for(i = 0; i < colorNum; i++)
+		//int i = 0;
+		for(int i = 0; i < colorNum; i++)
 		{
-			placement[numberOfGuesses][i] = 'c';
+			placement[i] = 'c';
 		}
-		while(i < placementNum + colorNum)
+		for(int i = colorNum; i < placementNum + colorNum; i++)
 		{
-			placement[numberOfGuesses][i] = 'p';
-			i++;
+			placement[i] = 'p';
+			//i++;
 		}
-		return colorNum;
+		return placementNum;
 	}
 	
 	/**********************************************
